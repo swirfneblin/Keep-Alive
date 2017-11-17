@@ -1,51 +1,66 @@
+'use strict';
 const chromeLauncher = require('chrome-launcher');
 const CDP = require('chrome-remote-interface');
 const data = {
-  url: "https://login.aliexpress.com/buyer_br.htm?spm=a2g03.11010108.1000002.7.74e196242nPjhk&return=https%3A%2F%2Fpt.aliexpress.com%2F&random=8F4EB892E95CB0372E0659440AB9BEEF",
-  user: "swirfneblin@gmail.com",
-  pass: "swirf007",
-  port: 8081
+  port: 51000
 };
 
-(async () => {
-  
-  let launchChrome = async () => {
-    return await chromeLauncher.launch({
-      port: data.port
-      chromeFlags: ['--start-maximized'],
-      chromePath: '/usr/bin/google-chrome'
-    })
-    .catch(e => console.log(e))
-    // .then(chrome => {
-    //   console.log(`Chrome debugging port running on ${chrome.port}`);
-    // });
-  };
+function processUri(url,script) {
+  return new Promise(async (fulfill, reject) => {
+    const client = await CDP({ port: data.port });
+    const {Page, DOM, Runtime} = client;
 
-  const chrome = await launchChrome();
-  const protocol = await CDP({
-    port: data.port
+    await Promise.all([ Page.enable(), Runtime.enable(), DOM.enable() ]);
+    await Page.navigate({url});
+    await setTimeout(async () => {
+      await Page.loadEventFired(async() => {
+        await setTimeout(async () => {
+          console.log('===> Loading URL: ',url)
+          for (let cmd of script){
+            console.log('        +  Execute Script: ',cmd)
+            await Runtime.evaluate({ expression: cmd });
+          }
+          console.log('\n\n');
+        }, 3000);
+        fulfill(client);
+      });
+    }, 6000);
   });
+}
 
-  const { DOM,Page,Emulation,Runtime } = protocol;
-  await Promise.all([
-    Page.enable(), 
-    Runtime.enable(), 
-    DOM.enable()
-  ]);
+async function process(objs) {
+  try {
+    for(let obj of objs){
+      const client = await Promise.resolve(processUri(obj.url, obj.scripts));
+      const {Page} = client;
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
 
-  Page.navigate({ url: data.url });
-
-  Page.loadEventFired(async() => {
-    const expressions = [
-      `document.querySelector('#fm-login-id').value = ${data.user};`,
-      `document.querySelector('#fm-login-password').value = ${data.pass};`,
-      `document.querySelector('#fm-login-submit').click();`
-      ];
-
-      for(let cmd of expressions)
-        await Runtime.evaluate({ expression: cmd });
-
-    // protocol.close();
-    // chrome.kill(); 
-  });
+(async() => {
+  await chromeLauncher.launch({  port: data.port, chromeFlags: ['--start-maximized'] });
+  await process([ 
+  {
+    url: "https://tableau.itau/#/signin?closePopupWhenDone=true&site=Corporativo&authSetting=DEFAULT&siteLuid=&embedded=true",
+    scripts: [
+    `document.querySelector("input[tb-test-id='textbox-username-input']").value = "*****"; `,
+    `jQuery( "input[tb-test-id='textbox-username-input']" ).trigger("change", {target: {value: "*****" }}); `,
+    `document.querySelector("input[tb-test-id='textbox-password-input']").value = "*****"; `,
+    `jQuery( "input[tb-test-id='textbox-password-input']" ).trigger("change", {target: {value: "*****" }}); `,
+    `document.querySelector("button[tb-test-id='button-signin']").click(); `
+    ]
+  }, 
+  {
+    url: "https://tableau.itau/#/site/Corporativo/views/Acompanhamentodecampoonlinev2/LogsticaOutdoor_v2?:iid=1",
+    scripts: [
+    `document.querySelector("input[tb-test-id='textbox-username-input']").value = "*****"; `,
+    `jQuery( "input[tb-test-id='textbox-username-input']" ).trigger('change', {target: {value: "*****" }}); `,
+    `document.querySelector("input[tb-test-id='textbox-password-input']").value = "*****"; `,
+    `jQuery( "input[tb-test-id='textbox-password-input']" ).trigger("change", {target: {value: "*****" }}); `,
+    `document.querySelector("button[tb-test-id='button-signin']").click(); `
+    ]
+  }
+  ]);    
 })();
