@@ -12,28 +12,27 @@ function processUri(url,script) {
 
     await Promise.all([ Page.enable(), Runtime.enable(), DOM.enable() ]);
     await Page.navigate({url});
-    await setTimeout(async () => {
-      await Page.loadEventFired(async() => {
-        await setTimeout(async () => {
-          console.log('===> Loading URL: ',url)
-          for (let cmd of script){
-            console.log('        +  Execute Script: ',cmd)
-            await Runtime.evaluate({ expression: cmd });
-          }
-          console.log('\n\n');
-        }, 3000);
-        fulfill(client);
-      });
-    }, 6000);
+    
+    await Page.loadEventFired(async() => {
+      await setTimeout(async () => {
+        console.log('===> Loading URL: ',url)
+        for (let cmd of script){
+          console.log('        +  Execute Script: ',cmd)
+          await Runtime.evaluate({ expression: cmd });
+        }
+        console.log('\n\n');
+      }, 3000);
+      fulfill(client);
+    });
   });
 }
 
 async function process(objs) {
   try {
-    for(let obj of objs){
-      const client = await Promise.resolve(processUri(obj.url, obj.scripts));
-      const {Page} = client;
-    }
+    const client = await Promise.resolve(processUri(objs[0].url, objs[0].scripts));
+    await setTimeout(async() => {
+      const client = await Promise.resolve(processUri(objs[1].url, objs[1].scripts));
+    }, 5000);
   } catch (err) {
     console.error(err);
   }
