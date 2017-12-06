@@ -1,6 +1,6 @@
-# Mantendo sessões ativas no Tableau
+# Mantendo sessões ativas no navegador
 
-Script realiza login e mantém sessão sempre ativa no [Dashboard de Logística](https://tableau.itau/#/site/Corporativo/views/Acompanhamentodecampoonlinev2/LogsticaOutdoor_v2?:iid=1), atualizando-o periodicamente.   
+Script realiza login e mantém sessão sempre ativa, atualizando-o periodicamente.   
 
 ## Requisitos:   
 Para configurar o ambiente para Login e Execução do dashboard no browser:
@@ -11,10 +11,7 @@ Para configurar o ambiente para Login e Execução do dashboard no browser:
 
 ## Configuração:
 
-* Antes de executar o script é preciso executar inicialmente o arquivo `setup/Configurar.bat` para Configuração do ambiente;
-* Em seguida executar o arquivo `/setup/Executar.bat`;
+* Em seguida executar o arquivo `/setup/Executar.cmd`;
 
-Browser deverá ser aberto na página de login, os dados serão inputados automaticamente e login para o dashboard de Logística em seguida!
+Browser deverá ser aberto na página de login, os dados serão inputados automaticamente
    
-Dúvidas:  
-**Charles Almeida Damasceno**   
